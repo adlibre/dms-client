@@ -4,7 +4,7 @@ Uploads file/directory into Adlibre DMS Api, depending on options/config specifi
 Looks for options file called options.conf in the folder directory and uses it's data for posting.
 
 In order to function it must have configuration file, usually called 'dms_sender.cfg'.
-You may override those settings by specifying alternative configuration file with '-config' key paramether.
+You may override those settings by specifying alternative configuration file with '-config' key parameter.
 
 ## Available options:
 
@@ -27,9 +27,10 @@ You may override those settings by specifying alternative configuration file wit
         with only specifying it's section name in same configuration file.
     -s
         Silence option.
-        Makes your programm output nothing into console whatever happens
+        Makes your program output nothing into console whatever happens.
+        THis does not affect creating/outputting of error files in any way.
     -f
-        Filenmae to upload.
+        Filename to upload.
         In case of this option set properly program uploads only this file and quits.
         you should pecify it with file name and path,
         e.g. '-f C:\some\path\myfile.pdf'
@@ -67,7 +68,7 @@ You may override those settings by specifying alternative configuration file wit
     [mimetype=application/pdf] in config
         mimetype of file to be sent. Default is: application/pdf
 
-Note: Console commands are for overriding config one's.
+Note: Console commands are for overriding config settings.
 e.g. In case you will run 'script_name.py -f somefile.pdf'
 it will assume you want to send one file, you have provided and ignore directory setting at config,
 even with provided -config and/or -chapter setting.
