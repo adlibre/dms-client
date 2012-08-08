@@ -35,7 +35,7 @@ You may override those settings by specifying alternative configuration file wit
         e.g. '-f C:\some\path\myfile.pdf'
         or unix ver:
         e.g. '-f ../somedir/file.pdf
-    -r
+    -remove
     [remove=yes]
         Delete original files after successful send
         and receiving '200 OK' response from server.

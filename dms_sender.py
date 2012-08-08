@@ -6,7 +6,7 @@ import itertools
 import ConfigParser
 import datetime
 
-__version__ = '0.6'
+__version__ = '0.7'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_sender.cfg'
@@ -89,7 +89,7 @@ Available options:
         e.g. '-f C:\some\path\myfile.pdf'
         or unix ver:
         e.g. '-f ../somedir/file.pdf
-    -r
+    -remove
     [remove=yes]
         Delete original files after successful send
         and receiving '200 OK' response from server.
@@ -286,8 +286,12 @@ def getopts(argv):
         if argv[0][0] == '-':               # find "-name value" pairs
             try:
                 # Getting value of this option
-                opts[argv[0]] = argv[1]     # dict key is "-name" arg
-                argv = argv[2:]
+                if argv[1][0] == '-': # Next option is an argv
+                    opts[argv[0]] = ''
+                    argv = argv[1:]
+                else:
+                    opts[argv[0]] = argv[1]     # dict key is "-name" arg
+                    argv = argv[2:]
             except IndexError:
                 # option has no argv left in the end
                 opts[argv[0]] = None
@@ -341,8 +345,8 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
         if not silent:
             print 'config used ......................................................no'
         return None
-
-    config = ConfigParser.RawConfigParser()
+    # Warning! allow_no_value may cause bugs in Python < 2.7
+    config = ConfigParser.RawConfigParser()# allow_no_value=True)
     config.readfp(config_instance)
 
     config_options = {}
@@ -481,14 +485,6 @@ if __name__ == '__main__':
         if 'pass' in config:
             password = config['pass']
 
-    remove = False
-    if '-r' in app_args:
-        remove = True
-    if not remove:
-        if 'remove' in config:
-            if config['remove'] == 'yes':
-                remove = True
-
     # Setting/Reading and debugging HOST + URL combinations.
     host = ''
     if '-host' in app_args:
@@ -551,6 +547,19 @@ if __name__ == '__main__':
             raise_error(DEFAUULT_ERROR_MESSAGES['no_proper_data'])
         directory = ''
 
+    remove = False
+    if '-remove' in app_args:
+        remove = True
+    if not remove:
+        if 'remove' in config:
+            if config['remove'] == 'yes':
+                remove = True
+    # Do not remove a file if name provided from console and config says to remove original
+    if remove:
+        if filename:
+            if not '-remove' in app_args:
+                remove = False
+
     # Other miscellaneous error handling
     if directory:
         if not os.path.isdir(directory):
@@ -565,11 +574,6 @@ if __name__ == '__main__':
         raise_error(DEFAUULT_ERROR_MESSAGES['no_password'])
     if not host:
         raise_error(DEFAUULT_ERROR_MESSAGES['no_host'])
-
-    # Do not remove a file if name provided from console and config says to remove original
-    if remove:
-        if filename:
-            remove = False
 
     # Calling main send function for either one file or directory with directory walker
     if filename:
