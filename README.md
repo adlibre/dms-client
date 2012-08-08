@@ -1,7 +1,6 @@
 # Command line Adlibre DMS file uploader utility.
 
 Uploads file/directory into Adlibre DMS Api, depending on options/config specified.
-Looks for options file called options.conf in the folder directory and uses it's data for posting.
 
 In order to function it must have configuration file, usually called 'dms_sender.cfg'.
 You may override those settings by specifying alternative configuration file with '-config' key parameter.
@@ -36,6 +35,10 @@ You may override those settings by specifying alternative configuration file wit
         e.g. '-f C:\some\path\myfile.pdf'
         or unix ver:
         e.g. '-f ../somedir/file.pdf
+    -r
+    [remove=yes]
+        Delete original files after successful send
+        and receiving '200 OK' response from server.
     -dir
     [directory=C:\somepath\in\system\]] in config
         Directory to scan files into.

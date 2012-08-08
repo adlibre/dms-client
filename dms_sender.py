@@ -1,6 +1,4 @@
-import urllib
 import urllib2
-import io
 import os
 import sys
 import mimetools, mimetypes
@@ -8,7 +6,7 @@ import itertools
 import ConfigParser
 import datetime
 
-__version__ = '0.5'
+__version__ = '0.6'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_sender.cfg'
@@ -21,7 +19,8 @@ DEFAULT_CFG_OPTIONS = [
     'directory',
     'mimetype',
     'files_type',
-    'user_agent'
+    'user_agent',
+    'remove',
 ]
 DEFAULT_API_LOCATION = 'api/file/'
 DEFAULT_USER_AGENT = 'Adlibre DMS API file uploader version: %s' % __version__
@@ -29,6 +28,7 @@ DEFAULT_FILE_TYPE = 'pdf'
 DEFAULT_MIMETYPE = 'application/pdf'
 ERROR_FILE_PREFIX = '.error'
 ERROR_FILE_MAIN = 'error.txt'
+LOG_FILE_MAIN = 'dms_sender.log'
 DEFAUULT_ERROR_MESSAGES = {
     'no_host': 'You should provide host to connect to. Please refer to help, running with -help',
     'no_config_or_console': 'Nothing to do. you should provide config and/or console parameters. Exiting.',
@@ -39,6 +39,7 @@ DEFAUULT_ERROR_MESSAGES = {
     'no_password': 'You should provide password. Using config or -pass param. Refer to -h for help.',
     'no_filetype': 'You must configure and/or provide extension of files to scan in the directory you have provided.',
     'no_proper_data': 'You made provided directory instead of file, reverse or target file/directory does not exist. Please recheck location in your config. Refer to -h for help.',
+    'no_file': 'File does not exist.'
 }
 
 help_text = """
@@ -47,8 +48,6 @@ Version """ + __version__ +"""
 
 Uploads file/directory into Adlibre DMS Api,
 depending on options/config specified.
-Looks for options file called options.conf
-in the folder directory and uses it's data for posting.
 
 In order to function it must have configuration file,
 usually called '""" + DEFAULT_CFG_FILE + """'.
@@ -90,6 +89,10 @@ Available options:
         e.g. '-f C:\some\path\myfile.pdf'
         or unix ver:
         e.g. '-f ../somedir/file.pdf
+    -r
+    [remove=yes]
+        Delete original files after successful send
+        and receiving '200 OK' response from server.
     -dir
     [directory=C:\somepath\in\system\]] in config
         Directory to scan files into.
@@ -97,6 +100,7 @@ Available options:
         in case of this is specified and option -f (single file) not provided
         Can be relative and/or full path to the directory to scan files into.
         e.g.(for windows): C:\scan\documents\adlibre\
+
         e.g.(for unix): ../../somedir/files/lie/into/
     -user
     [user=your_user_name] in config
@@ -205,6 +209,7 @@ def upload_file(
         user_agent=None,
         mimetype=None,
         file_place=None,
+        remove=False,
         silent=False
         ):
     """
@@ -259,6 +264,10 @@ def upload_file(
     if response:
         if not silent:
             print 'SERVER RESPONSE: OK'
+        if response.code == 200:
+            write_successlog(file_name)
+            if remove:
+                remove_file(file_place)
 
 def get_full_filename(name):
     """
@@ -374,6 +383,24 @@ def raise_error(message=None, error_file_name=None):
         print message
         sys.exit()
 
+def write_successlog(filename, message=''):
+    """
+    Writes down action of succeeded sending.
+    """
+    if os.path.isfile(LOG_FILE_MAIN):
+        log_file = open(LOG_FILE_MAIN, 'a')
+    else:
+        log_file = open(LOG_FILE_MAIN, 'w')
+        log_file.seek(0)
+    log_file.write('\n-----------------------------------------------------------------------------\n')
+    log_file.write(str(datetime.datetime.now())+'\n')
+    log_file.write('-----------------------------------------------------------------------------\n')
+    if message:
+        log_file.write(message + u' ' + unicode(filename))
+    else:
+        log_file.write(u'UPLOAD SUCCESSFUL of file: ' + unicode(filename))
+    log_file.close()
+
 def walk_directory(rootdir, file_type=None):
     """
     Walks through directory with files of provided format and
@@ -389,6 +416,20 @@ def walk_directory(rootdir, file_type=None):
             else:
                 fileList.append(os.path.join(root,file))
     return fileList
+
+def remove_file(file_path):
+    """
+    Deletes file with path specified from filesystem
+    """
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            write_successlog(file_path, ' Success removing file:')
+        except Exception, e:
+            raise_error(e, filename)
+    else:
+        raise_error(DEFAUULT_ERROR_MESSAGES['no_file'] + ': ' + file_path)
+
 
 ###########################################################################################
 ##################################### MAIN FUNCTION #######################################
@@ -439,6 +480,14 @@ if __name__ == '__main__':
     if not password:
         if 'pass' in config:
             password = config['pass']
+
+    remove = False
+    if '-r' in app_args:
+        remove = True
+    if not remove:
+        if 'remove' in config:
+            if config['remove'] == 'yes':
+                remove = True
 
     # Setting/Reading and debugging HOST + URL combinations.
     host = ''
@@ -517,6 +566,10 @@ if __name__ == '__main__':
     if not host:
         raise_error(DEFAUULT_ERROR_MESSAGES['no_host'])
 
+    # Do not remove a file if name provided from console and config says to remove original
+    if remove:
+        if filename:
+            remove = False
 
     # Calling main send function for either one file or directory with directory walker
     if filename:
@@ -528,6 +581,7 @@ if __name__ == '__main__':
                         user_agent=DEFAULT_USER_AGENT,
                         mimetype=mimetype,
                         file_place=filename,
+                        remove=remove,
                         silent=silent
                     )
     elif directory:
@@ -547,5 +601,6 @@ if __name__ == '__main__':
                             user_agent=DEFAULT_USER_AGENT,
                             mimetype=mimetype,
                             file_place=name,
+                            remove=remove,
                             silent=silent
                         )
