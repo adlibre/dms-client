@@ -64,7 +64,7 @@ Uploads file/directory into Adlibre DMS Api, depending on options/config specifi
 Looks for options file called options.conf in the folder directory and uses it's data for posting.
 
 In order to function it must have configuration file, usually called '""" + DEFAULT_CFG_FILE + """'.
-you may override those settings by calcifying alternative configuration file with '-config' key.
+You may override those settings by specifying alternative configuration file with '-config' key paramether.
 
 Available options:
 (Config file options are marked in [] and are equivalent)
