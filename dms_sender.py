@@ -8,7 +8,7 @@ import itertools
 import ConfigParser
 import datetime
 
-__version__ = '0.4'
+__version__ = '0.5'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_sender.cfg'
@@ -41,48 +41,42 @@ DEFAUULT_ERROR_MESSAGES = {
     'no_proper_data': 'You made provided directory instead of file, reverse or target file/directory does not exist. Please recheck location in your config. Refer to -h for help.',
 }
 
-#host = 'http://127.0.0.1:8000/' #'http://jtg-stage.dms.adlibre.net/'
-#USERNAME = 'admin'
-#PASSWORD = 'admin'
-#
-#filename = 'ADL-0001.pdf'
-#file_type = 'pdf'
-#mimetype = 'application/pdf'
-#
-
-#user_agent =
-#
-#error_file_prefix = '.error'
-#
-#error_files_directory = '/errors/'
-
 help_text = """
 Command line Adlibre DMS file uploader utility.
 Version """ + __version__ +"""
 
-Uploads file/directory into Adlibre DMS Api, depending on options/config specified.
-Looks for options file called options.conf in the folder directory and uses it's data for posting.
+Uploads file/directory into Adlibre DMS Api,
+depending on options/config specified.
+Looks for options file called options.conf
+in the folder directory and uses it's data for posting.
 
-In order to function it must have configuration file, usually called '""" + DEFAULT_CFG_FILE + """'.
-You may override those settings by specifying alternative configuration file with '-config' key parameter.
+In order to function it must have configuration file,
+usually called '""" + DEFAULT_CFG_FILE + """'.
+You may override those settings by specifying
+alternative configuration file with '-config' key parameter.
 
 Available options:
 (Config file options are marked in [] and are equivalent)
 
     -config
-        alternative configuration file you must specify in your system absolute path,
+        alternative configuration file you must specify
+        in your system absolute path,
         or simply it's filename in case it lays in this program directory.
         e.g. '-config myconfig.cfg'
-        will try to load your alternative configuration file called 'myconfig.cfg' that lays in the program path.
+        will try to load your alternative configuration file
+        called 'myconfig.cfg' that lays in the program path.
         e.g. '-config C:\mydir\congigfile.cfg'
         will try to load file 'configfile.cfg' in your 'C:\mydir\'
     -chapter
         alternative configuration file chapter
         usually marked with [] scopes.
-        e.g. [jtg-dms] is marking the section 'jtg-dms' in config and can be handled separately.
-        you must call this section specifying it's name directly after parameters.
+        e.g. [jtg-dms] is marking the section 'jtg-dms'
+        in config and can be handled separately.
+        you must call this section specifying it's
+        name directly after parameters.
         e.g. '-chapter jtg-dms'
-        This way you can call this to upload into any Adlibre DMS instance API,
+        This way you can call this to upload into
+        any Adlibre DMS instance API,
         with only specifying it's section name in same configuration file.
     -s
         Silence option.
@@ -90,7 +84,8 @@ Available options:
         THis does not affect creating/outputting of error files in any way.
     -f
         Filename to upload.
-        In case of this option set properly program uploads only this file and quits.
+        In case of this option set properly
+        program uploads only this file and quits.
         you should pecify it with file name and path,
         e.g. '-f C:\some\path\myfile.pdf'
         or unix ver:
@@ -116,7 +111,8 @@ Available options:
     [url=api/file/] in config
         Your Adlibre DMS API location to connect to.
         Default is set to 'api/file/'
-        Note you must specify it without the first '/' symbol in order to build the upload url normally.
+        Note you must specify it without the first
+        '/' symbol in order to build the upload url normally.
     -ft
     [file_type=pdf] in config
         Files type to scan for/suggest to API.
@@ -129,7 +125,8 @@ Available options:
 
 Note: Console commands are for overriding config settings.
 e.g. In case you will run '""" + sys.argv[0] + """ -f somefile.pdf'
-it will assume you want to send one file, you have provided and ignore directory setting at config,
+it will assume you want to send one file,
+you have provided and ignore directory setting at config,
 even with provided -config and/or -chapter setting.
 """
 
@@ -252,7 +249,8 @@ def upload_file(
     response = None
     try:
         response = opener.open(request)
-    except urllib2.HTTPError, e:
+    # Usecases when connection with this URL is not established and URL is wrong
+    except (urllib2.HTTPError, urllib2.URLError), e:
         if not silent:
             print 'SERVER RESPONSE: %s' % e
             print 'Writing Error file'
@@ -305,6 +303,7 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
         except ConfigParser.NoSectionError, e:
             if not silent:
                 print 'Config file Error:', e
+            raise_error(e)
 
     config_instance = None
     # Getting conf file defined
@@ -334,7 +333,7 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
             print 'config used ......................................................no'
         return None
 
-    config = ConfigParser.RawConfigParser(allow_no_value=True)
+    config = ConfigParser.RawConfigParser()
     config.readfp(config_instance)
 
     config_options = {}
