@@ -10,7 +10,7 @@ import datetime
 
 __version__ = '0.4'
 
-PROJECT_PATH = os.path.abspath(os.path.split(__file__)[0])
+PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_sender.cfg'
 DEFAULT_CFG_CHAPTER = 'main'
 DEFAULT_CFG_OPTIONS = [
@@ -373,7 +373,7 @@ def raise_error(message=None, error_file_name=None):
         err_file.write(message)
         err_file.close()
         print message
-        quit()
+        sys.exit()
 
 def walk_directory(rootdir, file_type=None):
     """
@@ -418,7 +418,7 @@ if __name__ == '__main__':
         print help_text
         if not silent:
             raw_input("Press Enter to exit...")
-            quit()
+            sys.exit()
 
     config = parse_config(config_file_name=config_file_name, cfg_chapter=cfg_chapter, silent=silent)
 
@@ -538,7 +538,7 @@ if __name__ == '__main__':
         if not filenames:
             if not silent:
                 print 'Nothing to send in this directory.'
-            quit()
+            sys.exit()
         for name in filenames:
             upload_file(
                             host,
