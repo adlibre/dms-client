@@ -1,9 +1,9 @@
 # Command line Adlibre DMS File Upload Client
 
-Uploads file/directory into Adlibre DMS API, depending on options/config specified.
+Uploads a signle file or whole directory of files into an Adlibre DMS instance using the DMS webservices API.
 
-In order to function it must have configuration file, usually called 'dms_client.cfg'.
-You may override those settings by specifying alternative configuration file with '-config' key parameter.
+In order to function the client requires a configuration file, usually called 'dms_client.cfg'.
+You may specify an alternative configuration file at runtime with '-config' key parameter, or define any of the configuration options as shown below.
 
 ## Available options:
 
@@ -16,6 +16,7 @@ You may override those settings by specifying alternative configuration file wit
         will try to load your alternative configuration file called 'myconfig.cfg' that lays in the program path.
         e.g. '-config C:\mydir\congigfile.cfg'
         will try to load file 'configfile.cfg' in your 'C:\mydir\'
+
     -chapter
         alternative configuration file chapter
         usually marked with [] scopes.
@@ -24,10 +25,12 @@ You may override those settings by specifying alternative configuration file wit
         e.g. '-chapter jtg-dms'
         This way you can call this to upload into any Adlibre DMS instance API,
         with only specifying it's section name in same configuration file.
+
     -s
         Silence option.
         Makes your program output nothing into console whatever happens.
         This does not affect creating/outputting of error files in any way.
+
     -f
         Filename to upload.
         In case of this option set properly program uploads only this file and quits.
@@ -35,10 +38,12 @@ You may override those settings by specifying alternative configuration file wit
         e.g. '-f C:\some\path\myfile.pdf'
         or unix ver:
         e.g. '-f ../somedir/file.pdf
+
     -remove
     [remove=yes]
-        Delete original files after successful send
-        and receiving '200 OK' response from server.
+        Delete the source files after posting
+        and receiving '200 OK' response from the server.
+
     -dir
     [directory=C:\somepath\in\system\]] in config
         Directory to scan files into.
@@ -47,32 +52,38 @@ You may override those settings by specifying alternative configuration file wit
         Can be relative and/or full path to the directory to scan files into.
         e.g.(for windows): C:\scan\documents\adlibre\
         e.g.(for unix): ../../somedir/files/lie/into/
+
     -user
     [user=your_user_name] in config
         DMS Username to access API
+
     -pass
     [pass=your_password] in config
         DMS Password to access API
+
     -host
     [host=http://.....] in config
         host of the api
+
     -url
     [url=api/file/] in config
         Your Adlibre DMS API location to connect to.
         Default is set to 'api/file/'
         Note you must specify it without the first '/' symbol in order to build the upload url normally.
+
     -ft
     [file_type=pdf] in config
         Files type to scan for/suggest to API.
         Default is set to 'pdf'
         This needs to be set up if you have provided a -dir setting.
         (In order to know files to scan in provided directory)
+
     -mimetype
     [mimetype=application/pdf] in config
         mimetype of file to be sent. Default is: application/pdf
 
 Note: Console commands are for overriding config settings.
-e.g. In case you will run 'script_name.py -f somefile.pdf'
+e.g. In case you will run 'dms_client.py -f somefile.pdf'
 it will assume you want to send one file, you have provided and ignore directory setting at config,
 even with provided -config and/or -chapter setting.
 
