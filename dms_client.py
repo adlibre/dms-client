@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Module: Adlibre DMS File Upload Client
 Project: Adlibre DMS File Upload Client
