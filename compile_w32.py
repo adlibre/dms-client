@@ -6,6 +6,8 @@ From here: http://sourceforge.net/projects/py2exe/files/py2exe/
 
 Compile environment must be win32 (Win XP, Win Server and so on...)
 
+And you'll also need a working install of Python 2.6 (or newer) from python.org.
+
 You must follow instructions from here: http://www.py2exe.org/index.cgi/Tutorial
 
 In short, you must run:
