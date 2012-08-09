@@ -1,3 +1,10 @@
+"""
+Module: Adlibre DMS File Upload Client
+Project: Adlibre DMS File Upload Client
+Copyright: Adlibre Pty Ltd 2012
+License: See LICENSE for license information
+"""
+
 import urllib2
 import os
 import sys
@@ -69,11 +76,11 @@ Available options:
     -chapter
         alternative configuration file chapter
         usually marked with [] scopes.
-        e.g. [jtg-dms] is marking the section 'jtg-dms'
+        e.g. [my-dms] is marking the section 'my-dms'
         in config and can be handled separately.
         you must call this section specifying it's
         name directly after parameters.
-        e.g. '-chapter jtg-dms'
+        e.g. '-chapter my-dms'
         This way you can call this to upload into
         any Adlibre DMS instance API,
         with only specifying it's section name in same configuration file.

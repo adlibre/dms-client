@@ -1,6 +1,6 @@
-# Command line Adlibre DMS file uploader utility.
+# Command line Adlibre DMS File Upload Client
 
-Uploads file/directory into Adlibre DMS Api, depending on options/config specified.
+Uploads file/directory into Adlibre DMS API, depending on options/config specified.
 
 In order to function it must have configuration file, usually called 'dms_client.cfg'.
 You may override those settings by specifying alternative configuration file with '-config' key parameter.
@@ -27,7 +27,7 @@ You may override those settings by specifying alternative configuration file wit
     -s
         Silence option.
         Makes your program output nothing into console whatever happens.
-        THis does not affect creating/outputting of error files in any way.
+        This does not affect creating/outputting of error files in any way.
     -f
         Filename to upload.
         In case of this option set properly program uploads only this file and quits.
