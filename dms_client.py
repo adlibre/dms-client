@@ -9,7 +9,7 @@ import datetime
 __version__ = '0.7'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
-DEFAULT_CFG_FILE = 'dms_sender.cfg'
+DEFAULT_CFG_FILE = 'dms_client.cfg'
 DEFAULT_CFG_CHAPTER = 'main'
 DEFAULT_CFG_OPTIONS = [
     'user',
@@ -28,7 +28,7 @@ DEFAULT_FILE_TYPE = 'pdf'
 DEFAULT_MIMETYPE = 'application/pdf'
 ERROR_FILE_PREFIX = '.error'
 ERROR_FILE_MAIN = 'error.txt'
-LOG_FILE_MAIN = 'dms_sender.log'
+LOG_FILE_MAIN = 'dms_client.log'
 DEFAUULT_ERROR_MESSAGES = {
     'no_host': 'You should provide host to connect to. Please refer to help, running with -help',
     'no_config_or_console': 'Nothing to do. you should provide config and/or console parameters. Exiting.',

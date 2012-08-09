@@ -2,7 +2,7 @@
 
 Uploads file/directory into Adlibre DMS Api, depending on options/config specified.
 
-In order to function it must have configuration file, usually called 'dms_sender.cfg'.
+In order to function it must have configuration file, usually called 'dms_client.cfg'.
 You may override those settings by specifying alternative configuration file with '-config' key parameter.
 
 ## Available options:
