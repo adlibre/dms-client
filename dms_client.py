@@ -38,7 +38,7 @@ DEFAULT_MIMETYPE = 'application/pdf'
 ERROR_FILE_PREFIX = '.error'
 ERROR_FILE_MAIN = 'error.txt'
 LOG_FILE_MAIN = 'dms_client.log'
-DEFAUULT_ERROR_MESSAGES = {
+DEFAULT_ERROR_MESSAGES = {
     'no_host': 'You should provide host to connect to. Please refer to help, running with -help',
     'no_config_or_console': 'Nothing to do. you should provide config and/or console parameters. Exiting.',
     'no_url': 'You should not provide an empty url',
@@ -47,7 +47,7 @@ DEFAUULT_ERROR_MESSAGES = {
     'no_username': 'You should provide username. Using config or -user param. Refer to -h for help.',
     'no_password': 'You should provide password. Using config or -pass param. Refer to -h for help.',
     'no_filetype': 'You must configure and/or provide extension of files to scan in the directory you have provided.',
-    'no_proper_data': 'You made provided directory instead of file, reverse or target file/directory does not exist. Please recheck location in your config. Refer to -h for help.',
+    'no_proper_data': 'You have provided a directory instead of a file, reverse or target file/directory does not exist. Please recheck location in your config. Refer to -h for help.',
     'no_file': 'File does not exist.'
 }
 
@@ -441,7 +441,7 @@ def remove_file(file_path):
         except Exception, e:
             raise_error(e, filename)
     else:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_file'] + ': ' + file_path)
+        raise_error(DEFAULT_ERROR_MESSAGES['no_file'] + ': ' + file_path)
 
 
 ###########################################################################################
@@ -477,7 +477,7 @@ if __name__ == '__main__':
 
     if not app_args and not config:
         if not silent:
-            raise_error(DEFAUULT_ERROR_MESSAGES['no_config_or_console'])
+            raise_error(DEFAULT_ERROR_MESSAGES['no_config_or_console'])
 
     # Getting option from sys.argv first then trying config file
     username = ''
@@ -502,7 +502,7 @@ if __name__ == '__main__':
         if 'host' in config:
             host = config['host']
     if not host:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_host'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_host'])
 
     url = host + DEFAULT_API_LOCATION
     if '-url' in app_args:
@@ -511,11 +511,11 @@ if __name__ == '__main__':
         if 'url' in config:
             url = host + config['url']
     if url == DEFAULT_API_LOCATION:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_host'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_host'])
     if url == host:
         if not silent:
             print 'Warning!:'
-            print (DEFAUULT_ERROR_MESSAGES['no_url'])
+            print (DEFAULT_ERROR_MESSAGES['no_url'])
         url = host + DEFAULT_API_LOCATION
         if not silent:
             print 'Api url forced set to default: %s' % url
@@ -539,7 +539,7 @@ if __name__ == '__main__':
     if not silent:
         print 'Using Mimetype: %s' % mimetype
     if not mimetype:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_mimetype'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_mimetype'])
 
     directory = ''
     if '-dir' in app_args:
@@ -549,11 +549,11 @@ if __name__ == '__main__':
             directory = config['directory']
     if (not directory) and (not filename):
         if not silent:
-            raise_error(DEFAUULT_ERROR_MESSAGES['no_data'])
+            raise_error(DEFAULT_ERROR_MESSAGES['no_data'])
     # Forcing filename provided to override default sending directory of files
     if filename:
         if not os.path.isfile(filename):
-            raise_error(DEFAUULT_ERROR_MESSAGES['no_proper_data'])
+            raise_error(DEFAULT_ERROR_MESSAGES['no_proper_data'])
         directory = ''
 
     remove = False
@@ -572,17 +572,17 @@ if __name__ == '__main__':
     # Other miscellaneous error handling
     if directory:
         if not os.path.isdir(directory):
-            raise_error(DEFAUULT_ERROR_MESSAGES['no_proper_data'])
+            raise_error(DEFAULT_ERROR_MESSAGES['no_proper_data'])
         if not file_type:
-            raise_error(DEFAUULT_ERROR_MESSAGES['no_filetype'])
+            raise_error(DEFAULT_ERROR_MESSAGES['no_filetype'])
     if not mimetype:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_mimetype'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_mimetype'])
     if not username:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_username'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_username'])
     if not password:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_password'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_password'])
     if not host:
-        raise_error(DEFAUULT_ERROR_MESSAGES['no_host'])
+        raise_error(DEFAULT_ERROR_MESSAGES['no_host'])
 
     # Calling main send function for either one file or directory with directory walker
     if filename:

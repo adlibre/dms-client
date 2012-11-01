@@ -1,6 +1,6 @@
 # Command line Adlibre DMS File Upload Client
 
-Uploads a signle file or whole directory of files into an Adlibre DMS instance using the DMS webservices API.
+Uploads a single file or whole directory of files into an Adlibre DMS instance using the DMS webservice API.
 
 In order to function the client requires a configuration file, usually called 'dms_client.cfg'.
 You may specify an alternative configuration file at runtime with '-config' key parameter, or define any of the configuration options as shown below.
@@ -20,9 +20,9 @@ You may specify an alternative configuration file at runtime with '-config' key 
     -chapter
         alternative configuration file chapter
         usually marked with [] scopes.
-        e.g. [jtg-dms] is marking the section 'jtg-dms' in config and can be handled separately.
+        e.g. [my-dms] is marking the section 'my-dms' in config and can be handled separately.
         you must call this section specifying it's name directly after parameters.
-        e.g. '-chapter jtg-dms'
+        e.g. '-chapter my-dms'
         This way you can call this to upload into any Adlibre DMS instance API,
         with only specifying it's section name in same configuration file.
 
