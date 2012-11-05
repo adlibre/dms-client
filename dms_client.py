@@ -368,7 +368,7 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
         print 'config used ......................................................yes'
     return config_options
 
-def raise_error(message=None, error_file_name=None):
+def raise_error(message=None, error_file_name=None, error_level=1):
     """
     Breaks program with error, message provided.
     Writes down error text to file.
@@ -396,7 +396,7 @@ def raise_error(message=None, error_file_name=None):
         err_file.write(str(message))
         err_file.close()
         print message
-        sys.exit()
+        sys.exit(error_level)
 
 def write_successlog(filename, message=''):
     """
@@ -473,7 +473,7 @@ if __name__ == '__main__':
         print help_text
         if not silent:
             raw_input("Press Enter to exit...")
-            sys.exit()
+            sys.exit(0)
 
     config = parse_config(config_file_name=config_file_name, cfg_chapter=cfg_chapter, silent=silent)
 
@@ -606,7 +606,7 @@ if __name__ == '__main__':
         if not filenames:
             if not silent:
                 print 'Nothing to send in this directory.'
-            sys.exit()
+            sys.exit(0)
         for name in filenames:
             upload_file(
                             host,
