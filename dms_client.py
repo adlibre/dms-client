@@ -391,7 +391,7 @@ def raise_error(message=None, error_file_name=None):
             err_file = open(ERROR_FILE_MAIN, 'w')
             err_file.seek(0)
 
-        err_file.write(message)
+        err_file.write(str(message))
         err_file.close()
         print message
         sys.exit()
