@@ -21,6 +21,8 @@ It will produce 2 folders /build/ and /dist/
 Rename it and use like a program distribution.
 """
 
+# TODO: Merge this with setup.py
+
 from distutils.core import setup
 import py2exe
 
