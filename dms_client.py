@@ -263,6 +263,8 @@ def upload_file(
     response = None
     try:
         response = opener.open(request)
+        opener.close()
+        work_file.close()
     # Usecases when connection with this URL is not established and URL is wrong
     except (urllib2.HTTPError, urllib2.URLError), e:
         if not silent:
