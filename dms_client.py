@@ -143,6 +143,7 @@ you have provided and ignore directory setting at config,
 even with provided -config and/or -chapter setting.
 """
 
+
 ###########################################################################################
 ############################## MULTIPART FORM EMULATOR ####################################
 ###########################################################################################
@@ -280,6 +281,7 @@ def upload_file(
             if remove:
                 remove_file(file_place)
 
+
 def get_full_filename(name):
     """
     Extracts only filename from full path
@@ -287,6 +289,7 @@ def get_full_filename(name):
     if os.sep or os.pardir in name:
         name = os.path.split(name)[1]
     return name
+
 
 def getopts(argv):
     """
@@ -310,6 +313,7 @@ def getopts(argv):
         else:
             argv = argv[1:]
     return opts
+
 
 def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
     """
@@ -368,6 +372,7 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
         print 'config used ......................................................yes'
     return config_options
 
+
 def raise_error(message=None, error_file_name=None, error_level=1):
     """
     Breaks program with error, message provided.
@@ -398,6 +403,7 @@ def raise_error(message=None, error_file_name=None, error_level=1):
         print message
         sys.exit(error_level)
 
+
 def write_successlog(filename, message=''):
     """
     Writes down action of succeeded sending.
@@ -416,6 +422,7 @@ def write_successlog(filename, message=''):
         log_file.write(u'UPLOAD SUCCESSFUL of file: ' + unicode(filename))
     log_file.close()
 
+
 def walk_directory(rootdir, file_type=None):
     """
     Walks through directory with files of provided format and
@@ -431,6 +438,7 @@ def walk_directory(rootdir, file_type=None):
             else:
                 fileList.append(os.path.join(root,file))
     return fileList
+
 
 def remove_file(file_path):
     """
