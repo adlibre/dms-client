@@ -222,9 +222,7 @@ def upload_file(
         remove=False,
         silent=False
         ):
-    """
-    Main uploader function
-    """
+    """Main uploader function"""
     # Creating Auth Opener
     # create a password manager
     password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -277,24 +275,21 @@ def upload_file(
         if not silent:
             print 'SERVER RESPONSE: OK'
         if response.code == 200:
+            # TODO: check for file revision count through API here
             write_successlog(file_name)
             if remove:
                 remove_file(file_place)
 
 
 def get_full_filename(name):
-    """
-    Extracts only filename from full path
-    """
+    """Extracts only filename from full path"""
     if os.sep or os.pardir in name:
         name = os.path.split(name)[1]
     return name
 
 
 def getopts(argv):
-    """
-    Gets options from sys.argv and transfers them into handy dictionary
-    """
+    """Gets options from sys.argv and transfers them into handy dictionary"""
     opts = {}
     while argv:
         if argv[0][0] == '-':               # find "-name value" pairs
@@ -316,9 +311,7 @@ def getopts(argv):
 
 
 def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
-    """
-    Parses specified config file or uses system set.
-    """
+    """Parses specified config file or uses system set."""
 
     def get_option(config, option, config_options):
         # looks for option and appends it to options dictionary
@@ -374,10 +367,9 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
 
 
 def raise_error(message=None, error_file_name=None, error_level=1):
-    """
-    Breaks program with error, message provided.
-    Writes down error text to file.
-    """
+    """Breaks program with error, message provided.
+
+    Writes down error text to file."""
     if error_file_name:
         error_file = open(str(error_file_name)+ERROR_FILE_PREFIX, 'w')
         error_file.seek(0)
@@ -405,9 +397,7 @@ def raise_error(message=None, error_file_name=None, error_level=1):
 
 
 def write_successlog(filename, message=''):
-    """
-    Writes down action of succeeded sending.
-    """
+    """Writes down action of succeeded sending."""
     if os.path.isfile(LOG_FILE_MAIN):
         log_file = open(LOG_FILE_MAIN, 'a')
     else:
@@ -424,10 +414,9 @@ def write_successlog(filename, message=''):
 
 
 def walk_directory(rootdir, file_type=None):
-    """
-    Walks through directory with files of provided format and
-    returns the list of their name with path (ready to open) or empty list.
-    """
+    """Walks through directory with files of provided format and
+
+    returns the list of their name with path (ready to open) or empty list."""
     fileList = []
     for root, subFolders, files in os.walk(rootdir):
         for file in files:
@@ -441,9 +430,7 @@ def walk_directory(rootdir, file_type=None):
 
 
 def remove_file(file_path):
-    """
-    Deletes file with path specified from filesystem
-    """
+    """Deletes file with path specified from filesystem"""
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
