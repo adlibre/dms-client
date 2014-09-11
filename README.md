@@ -71,6 +71,12 @@ You may specify an alternative configuration file at runtime with '-config' key 
         Default is set to 'api/file/'
         Note you must specify it without the first '/' symbol in order to build the upload url normally.
 
+    -fileinfo_location
+    [API_FILEINFO_LOCATION=api/revision_count/] in config
+        Adlibre DMS API location to get file revisions count.
+        This option se and configured properly also applies proper support of uncategorized file into API.
+        It stores file names of API returned uncetegorized code into the log file and warns user accordingly.
+
     -ft
     [file_type=pdf] in config
         Files type to scan for/suggest to API.

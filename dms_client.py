@@ -16,7 +16,7 @@ import itertools
 import ConfigParser
 import datetime
 
-__version__ = '0.7.1'
+__version__ = '0.7.2'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_client.cfg'
@@ -128,6 +128,11 @@ Available options:
         Default is set to 'api/file/'
         Note you must specify it without the first
         '/' symbol in order to build the upload url normally.
+    -fileinfo_location
+    [API_FILEINFO_LOCATION=api/revision_count/] in config
+        Adlibre DMS API location to get file revisions count.
+        This option se and configured properly also applies proper support of uncategorized file into API.
+        It stores file names of API returned uncetegorized code into the log file and warns user accordingly.
     -ft
     [file_type=pdf] in config
         Files type to scan for/suggest to API.
