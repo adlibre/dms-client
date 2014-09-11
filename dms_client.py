@@ -10,6 +10,7 @@ License: See LICENSE for license information
 import urllib2
 import os
 import sys
+import json
 import mimetools, mimetypes
 import itertools
 import ConfigParser
@@ -32,6 +33,7 @@ DEFAULT_CFG_OPTIONS = [
     'remove',
 ]
 DEFAULT_API_LOCATION = 'api/file/'
+API_FILEINFO_LOCATION = 'api/revision_count/'
 DEFAULT_USER_AGENT = 'Adlibre DMS API file uploader version: %s' % __version__
 DEFAULT_FILE_TYPE = 'pdf'
 DEFAULT_MIMETYPE = 'application/pdf'
@@ -211,24 +213,46 @@ class MultiPartForm(object):
         return '\r\n'.join(flattened)
 
 
-def upload_file(
-        host,
-        username,
-        password,
-        url=None,
-        user_agent=None,
-        mimetype=None,
-        file_place=None,
-        remove=False,
-        silent=False
-        ):
+def check_file_uploaded(file_place, options, opener):
+    """Checking if file revision for uploaded code is greater then 0"""
+    original_code = False
+    original_filename = get_full_filename(file_place)
+    if "." in original_filename:
+        original_code, fileExtension = os.path.splitext(original_filename)
+    file_name = options['uploaded_code']
+    code = file_name
+    if "." in file_name:
+        code, fileExtension = os.path.splitext(file_name)
+    if code != original_code:
+        msg = 'WARNING! File stored as uncategorized file code: %s for file:' % file_name
+        if not options['silent']:
+            print msg + ' %s' % original_filename
+        write_successlog(original_filename, msg)
+    full_url = options['host'] + options['fileinfo_loc'] + code + '?only_metadata=true'
+    request = urllib2.Request(full_url)
+    response = opener.open(request)
+    opener.close()
+    if response:
+        if response.code == 200:
+            fileinfo = response.fp.read()
+            revisions_count = int(fileinfo)
+            if revisions_count > 0:
+                return True
+        else:
+            return False
+    return False
+
+
+def upload_file(file_place, opt):
     """Main uploader function"""
+    silent = opt['silent']
+
     # Creating Auth Opener
     # create a password manager
     password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
     # Add the username and password.
     # If we knew the realm, we could use it instead of ``None``.
-    password_mgr.add_password(None, host, username, password)
+    password_mgr.add_password(None, opt['host'], opt['username'], opt['password'])
     handler = urllib2.HTTPBasicAuthHandler(password_mgr)
     # create "opener" (OpenerDirector instance)
     opener = urllib2.build_opener(handler)
@@ -246,12 +270,12 @@ def upload_file(
     file_name = get_full_filename(file_place)
 
     # Adding our file to form
-    form.add_file('file', file_name, fileHandle=work_file, mimetype=mimetype)
+    form.add_file('file', file_name, fileHandle=work_file, mimetype=opt['mimetype'])
 
     # Build the request
-    full_url = url+file_name
+    full_url = opt['url'] + file_name
     request = urllib2.Request(full_url)
-    request.add_header('User-agent', user_agent)
+    request.add_header('User-agent', opt['user_agent'])
     body = str(form)
     request.add_header('Content-type', form.get_content_type())
     request.add_header('Content-length', len(body))
@@ -275,16 +299,22 @@ def upload_file(
         if not silent:
             print 'SERVER RESPONSE: OK'
         if response.code == 200:
-            # TODO: check for file revision count through API here
+            if opt['fileinfo_loc']:
+                opt['uploaded_code'] = json.loads(response.fp.read())
+                result = check_file_uploaded(file_place, opt, opener)
+                if not result:
+                    raise_error('File uploaded check failed', file_name)
+                    return False
             write_successlog(file_name)
-            if remove:
+            if opt['remove']:
                 remove_file(file_place)
 
 
-def get_full_filename(name):
+def get_full_filename(full_name):
     """Extracts only filename from full path"""
-    if os.sep or os.pardir in name:
-        name = os.path.split(name)[1]
+    name = full_name
+    if os.sep or os.pardir in full_name:
+        name = os.path.split(full_name)[1]
     return name
 
 
@@ -354,7 +384,7 @@ def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
             print 'config used ......................................................no'
         return None
     # Warning! allow_no_value may cause bugs in Python < 2.7
-    config = ConfigParser.RawConfigParser()# allow_no_value=True)
+    config = ConfigParser.RawConfigParser()  # allow_no_value=True)
     config.readfp(config_instance)
 
     config_options = {}
@@ -498,8 +528,6 @@ if __name__ == '__main__':
     if not host:
         if 'host' in config:
             host = config['host']
-    if not host:
-        raise_error(DEFAULT_ERROR_MESSAGES['no_host'])
 
     url = host + DEFAULT_API_LOCATION
     if '-url' in app_args:
@@ -535,8 +563,15 @@ if __name__ == '__main__':
             mimetype = config['mimetype']
     if not silent:
         print 'Using Mimetype: %s' % mimetype
-    if not mimetype:
-        raise_error(DEFAULT_ERROR_MESSAGES['no_mimetype'])
+
+    fileinfo_loc = API_FILEINFO_LOCATION
+    if '-fileinfo_location' in app_args:
+        fileinfo_loc = app_args['-fileinfo_location']
+    if not fileinfo_loc:
+        if 'API_FILEINFO_LOCATION' in config:
+            fileinfo_loc = config['API_FILEINFO_LOCATION']
+    if not silent:
+        print 'Using API FILEINFO URL: %s' % fileinfo_loc
 
     directory = ''
     if '-dir' in app_args:
@@ -581,19 +616,21 @@ if __name__ == '__main__':
     if not host:
         raise_error(DEFAULT_ERROR_MESSAGES['no_host'])
 
+    options = {
+        'host': host,
+        'username': username,
+        'password': password,
+        'url': url,
+        'user_agent': DEFAULT_USER_AGENT,
+        'mimetype': mimetype,
+        'remove': remove,
+        'silent': silent,
+        'fileinfo_loc': fileinfo_loc,
+    }
+
     # Calling main send function for either one file or directory with directory walker
     if filename:
-        upload_file(
-                        host,
-                        username,
-                        password,
-                        url=url,
-                        user_agent=DEFAULT_USER_AGENT,
-                        mimetype=mimetype,
-                        file_place=filename,
-                        remove=remove,
-                        silent=silent
-                    )
+        upload_file(filename, options)
     elif directory:
         filenames = walk_directory(directory, file_type)
         if not silent:
@@ -603,14 +640,4 @@ if __name__ == '__main__':
                 print 'Nothing to send in this directory.'
             sys.exit(0)
         for name in filenames:
-            upload_file(
-                            host,
-                            username,
-                            password,
-                            url=url,
-                            user_agent=DEFAULT_USER_AGENT,
-                            mimetype=mimetype,
-                            file_place=name,
-                            remove=remove,
-                            silent=silent
-                        )
+            upload_file(name, options)
