@@ -31,9 +31,9 @@ DEFAULT_CFG_OPTIONS = [
     'files_type',
     'user_agent',
     'remove',
+    'API_FILEINFO_LOCATION'
 ]
 DEFAULT_API_LOCATION = 'api/file/'
-API_FILEINFO_LOCATION = 'api/revision_count/'
 DEFAULT_USER_AGENT = 'Adlibre DMS API file uploader version: %s' % __version__
 DEFAULT_FILE_TYPE = 'pdf'
 DEFAULT_MIMETYPE = 'application/pdf'
@@ -564,7 +564,7 @@ if __name__ == '__main__':
     if not silent:
         print 'Using Mimetype: %s' % mimetype
 
-    fileinfo_loc = API_FILEINFO_LOCATION
+    fileinfo_loc = None
     if '-fileinfo_location' in app_args:
         fileinfo_loc = app_args['-fileinfo_location']
     if not fileinfo_loc:
