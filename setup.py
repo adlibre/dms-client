@@ -13,7 +13,7 @@ setup(name='dms_client',
     scripts=['dms_client.py'],
     package_data={
             'dms_client': [
-		        'LICENSE',
+                'LICENSE',
                 'README.md',
                 '__init__.py',
                 'dms_client.py',
