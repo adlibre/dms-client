@@ -299,7 +299,7 @@ def upload_file(file_place, opt):
         if not silent_:
             print 'SERVER RESPONSE: %s' % e
             print 'Writing Error file'
-        raise_error(e, file_place)
+        raise_error("%s : %s""" % (file_place, e))
         pass
     if response:
         if not silent_:
@@ -309,7 +309,7 @@ def upload_file(file_place, opt):
                 opt['uploaded_code'] = json.loads(response.fp.read())
                 result = check_file_uploaded(file_place, opt, opener)
                 if not result:
-                    raise_error('File uploaded check failed', file_name)
+                    raise_error('File uploaded check failed %s' % file_name)
                     return False
             write_successlog(file_name)
             if opt['remove']:
@@ -402,33 +402,23 @@ def parse_config(cfg_file_name=None, config_chapter=False, _silent=False):
     return config_options
 
 
-def raise_error(message=None, error_file_name=None, error_level=1):
+def raise_error(message=None, error_level=1):
     """Breaks program with error, message provided.
 
     Writes down error text to file."""
-    if error_file_name:
-        error_file = open(str(error_file_name)+ERROR_FILE_PREFIX, 'w')
-        error_file.seek(0)
-        try:
-            for line in message.readlines():
-                error_file.write(line)
-        except Exception, e:
-            error_file.write(str(message))
-            error_file.write(str(e))
-            pass
-        error_file.close()
-    if message and not error_file_name:
+    if message:
         if os.path.isfile(ERROR_FILE_MAIN):
             err_file = open(ERROR_FILE_MAIN, 'a')
-            err_file.write('\n-----------------------------------------------------------------------------\n')
-            err_file.write(str(datetime.datetime.now())+'\n')
-            err_file.write('-----------------------------------------------------------------------------\n')
         else:
             err_file = open(ERROR_FILE_MAIN, 'w')
             err_file.seek(0)
 
+        err_file.write('\n-----------------------------------------------------------------------------\n')
+        err_file.write(str(datetime.datetime.now())+'\n')
+        err_file.write('-----------------------------------------------------------------------------\n')
         err_file.write(str(message))
         err_file.close()
+        write_successlog('Error!', message=message)
     print message
     sys.exit(error_level)
 
@@ -473,7 +463,7 @@ def remove_file(file_path):
             os.remove(file_path)
             write_successlog(file_path, ' Success removing file:')
         except Exception, e:
-            raise_error(e, file_path)
+            raise_error("%s : %s""" % (file_path, e))
     else:
         raise_error(DEFAULT_ERROR_MESSAGES['no_file'] + ': ' + file_path)
 
@@ -508,7 +498,7 @@ if __name__ == '__main__':
             raw_input("Press Enter to exit...")
             sys.exit(0)
 
-    config = parse_config(config_file_name=config_file_name, cfg_chapter=cfg_chapter, silent=silent)
+    config = parse_config(cfg_file_name=config_file_name, config_chapter=cfg_chapter, _silent=silent)
 
     if not app_args and not config:
         if not silent:
