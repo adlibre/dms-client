@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """
 Module: Adlibre DMS File Upload Client
 Project: Adlibre DMS File Upload Client
@@ -11,7 +10,8 @@ import urllib2
 import os
 import sys
 import json
-import mimetools, mimetypes
+import mimetools
+import mimetypes
 import itertools
 import ConfigParser
 import datetime
@@ -49,13 +49,15 @@ DEFAULT_ERROR_MESSAGES = {
     'no_username': 'You should provide username. Using config or -user param. Refer to -h for help.',
     'no_password': 'You should provide password. Using config or -pass param. Refer to -h for help.',
     'no_filetype': 'You must configure and/or provide extension of files to scan in the directory you have provided.',
-    'no_proper_data': 'You have provided a directory instead of a file, reverse or target file/directory does not exist. Please recheck location in your config. Refer to -h for help.',
+    'no_proper_data': 'You have provided a directory instead of a file,\n' +
+                      'reverse or target file/directory does not exist.\n' +
+                      'Please recheck location in your config. Refer to -h for help.',
     'no_file': 'File does not exist.'
 }
 
 help_text = """
 Command line Adlibre DMS file uploader utility.
-Version """ + __version__ +"""
+Version """ + __version__ + """
 
 Uploads file/directory into Adlibre DMS Api,
 depending on options/config specified.
@@ -166,17 +168,17 @@ class MultiPartForm(object):
     def get_content_type(self):
         return 'multipart/form-data; boundary=%s' % self.boundary
 
-    def add_field(self, name, value):
+    def add_field(self, field_name, value):
         """Add a simple field to the form data."""
-        self.form_fields.append((name, value))
+        self.form_fields.append((field_name, value))
         return
 
-    def add_file(self, fieldname, filename, fileHandle, mimetype=None):
+    def add_file(self, field_name, file_name, file_handle, current_mimetype=None):
         """Add a file to be uploaded."""
-        body = fileHandle.read()
-        if mimetype is None:
-            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        self.files.append((fieldname, filename, mimetype, body))
+        body = file_handle.read()
+        if current_mimetype is None:
+            current_mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        self.files.append((field_name, file_name, current_mimetype, body))
         return
 
     def __str__(self):
@@ -190,24 +192,23 @@ class MultiPartForm(object):
 
         # Add the form fields
         parts.extend(
-            [ part_boundary,
-              'Content-Disposition: form-data; name="%s"' % name,
-              '',
-              value,
-              ]
-                for name, value in self.form_fields
+            [
+                part_boundary,
+                'Content-Disposition: form-data; name="%s"' % n,
+                '',
+                value,
+            ] for n, value in self.form_fields
         )
 
         # Add the files to upload
         parts.extend(
-            [ part_boundary,
-              'Content-Disposition: file; name="%s"; filename="%s"' %\
-              (field_name, filename),
-              'Content-Type: %s' % content_type,
-              '',
-              body,
-              ]
-                for field_name, filename, content_type, body in self.files
+            [
+                part_boundary,
+                'Content-Disposition: file; name="%s"; filename="%s"' % (field_name, file_name),
+                'Content-Type: %s' % content_type,
+                '',
+                body,
+            ] for field_name, file_name, content_type, body in self.files
         )
 
         # Flatten the list and add closing boundary marker,
@@ -218,29 +219,29 @@ class MultiPartForm(object):
         return '\r\n'.join(flattened)
 
 
-def check_file_uploaded(file_place, options, opener):
+def check_file_uploaded(file_place, opts, opener):
     """Checking if file revision for uploaded code is greater then 0"""
     original_code = False
     original_filename = get_full_filename(file_place)
     if "." in original_filename:
-        original_code, fileExtension = os.path.splitext(original_filename)
-    file_name = options['uploaded_code']
+        original_code, file_extension = os.path.splitext(original_filename)
+    file_name = opts['uploaded_code']
     code = file_name
     if "." in file_name:
-        code, fileExtension = os.path.splitext(file_name)
+        code, file_extension = os.path.splitext(file_name)
     if code != original_code:
         msg = 'WARNING! File stored as uncategorized file code: %s for file:' % file_name
-        if not options['silent']:
+        if not opts['silent']:
             print msg + ' %s' % original_filename
         write_successlog(original_filename, msg)
-    full_url = options['host'] + options['fileinfo_loc'] + code + '?only_metadata=true'
+    full_url = opts['host'] + opts['fileinfo_loc'] + code + '?only_metadata=true'
     request = urllib2.Request(full_url)
     response = opener.open(request)
     opener.close()
     if response:
         if response.code == 200:
-            fileinfo = response.fp.read()
-            revisions_count = int(fileinfo)
+            file_info = response.fp.read()
+            revisions_count = int(file_info)
             if revisions_count > 0:
                 return True
         else:
@@ -250,7 +251,7 @@ def check_file_uploaded(file_place, options, opener):
 
 def upload_file(file_place, opt):
     """Main uploader function"""
-    silent = opt['silent']
+    silent_ = opt['silent']
 
     # Creating Auth Opener
     # create a password manager
@@ -275,7 +276,7 @@ def upload_file(file_place, opt):
     file_name = get_full_filename(file_place)
 
     # Adding our file to form
-    form.add_file('file', file_name, fileHandle=work_file, mimetype=opt['mimetype'])
+    form.add_file('file', file_name, file_handle=work_file, current_mimetype=opt['mimetype'])
 
     # Build the request
     full_url = opt['url'] + file_name
@@ -286,7 +287,7 @@ def upload_file(file_place, opt):
     request.add_header('Content-length', len(body))
     request.add_data(body)
 
-    if not silent:
+    if not silent_:
         print 'SENDING FILE: %s' % file_place
     response = None
     try:
@@ -295,13 +296,13 @@ def upload_file(file_place, opt):
         work_file.close()
     # Usecases when connection with this URL is not established and URL is wrong
     except (urllib2.HTTPError, urllib2.URLError), e:
-        if not silent:
+        if not silent_:
             print 'SERVER RESPONSE: %s' % e
             print 'Writing Error file'
         raise_error(e, file_place)
         pass
     if response:
-        if not silent:
+        if not silent_:
             print 'SERVER RESPONSE: OK'
         if response.code == 200:
             if opt['fileinfo_loc']:
@@ -317,10 +318,10 @@ def upload_file(file_place, opt):
 
 def get_full_filename(full_name):
     """Extracts only filename from full path"""
-    name = full_name
+    result_name = full_name
     if os.sep or os.pardir in full_name:
-        name = os.path.split(full_name)[1]
-    return name
+        result_name = os.path.split(full_name)[1]
+    return result_name
 
 
 def getopts(argv):
@@ -330,7 +331,7 @@ def getopts(argv):
         if argv[0][0] == '-':               # find "-name value" pairs
             try:
                 # Getting value of this option
-                if argv[1][0] == '-': # Next option is an argv
+                if argv[1][0] == '-':  # Next option is an argv
                     opts[argv[0]] = ''
                     argv = argv[1:]
                 else:
@@ -345,58 +346,58 @@ def getopts(argv):
     return opts
 
 
-def parse_config(config_file_name=None, cfg_chapter=False, silent=False):
+def parse_config(cfg_file_name=None, config_chapter=False, _silent=False):
     """Parses specified config file or uses system set."""
 
-    def get_option(config, option, config_options):
+    def get_option(opt_config, opt, config_opts):
         # looks for option and appends it to options dictionary
         try:
             try:
-                opt_value = config.get(cfg_chapter or DEFAULT_CFG_CHAPTER, option)
-                config_options[option] = opt_value
+                opt_value = opt_config.get(config_chapter or DEFAULT_CFG_CHAPTER, opt)
+                config_opts[option] = opt_value
             except ConfigParser.NoOptionError:
                 pass
-        except ConfigParser.NoSectionError, e:
-            if not silent:
-                print 'Config file Error:', e
-            raise_error(e)
+        except ConfigParser.NoSectionError, err:
+            if not _silent:
+                print 'Config file Error:', err
+            raise_error(err)
 
     config_instance = None
     # Getting conf file defined
-    if config_file_name:
-        confile = config_file_name
+    if cfg_file_name:
+        config_file = cfg_file_name
     else:
-        confile = DEFAULT_CFG_FILE
+        config_file = DEFAULT_CFG_FILE
     # Trying to open file and getting default config if failed.
     try:
-        config_instance = open(os.path.join(PROJECT_PATH, confile), "rb")
+        config_instance = open(os.path.join(PROJECT_PATH, config_file), "rb")
 
     except IOError, e:
-        if not silent:
+        if not _silent:
             print e
             print 'Trying to read standard config file: ./' + DEFAULT_CFG_FILE
         # Trying to get config from default file if exists
         try:
             config_instance = open(DEFAULT_CFG_FILE, "rb")
         except IOError, e:
-            if not silent:
+            if not _silent:
                 print e
                 print 'Not found standard config. can now function only with console params'
         pass
 
     if not config_instance:
-        if not silent:
+        if not _silent:
             print 'config used ......................................................no'
         return None
     # Warning! allow_no_value may cause bugs in Python < 2.7
-    config = ConfigParser.RawConfigParser()  # allow_no_value=True)
-    config.readfp(config_instance)
+    cfg = ConfigParser.RawConfigParser()  # allow_no_value=True)
+    cfg.readfp(config_instance)
 
     config_options = {}
     for option in DEFAULT_CFG_OPTIONS:
-        get_option(config, option, config_options)
+        get_option(cfg, option, config_options)
 
-    if not silent:
+    if not _silent:
         print 'config used ......................................................yes'
     return config_options
 
@@ -411,8 +412,9 @@ def raise_error(message=None, error_file_name=None, error_level=1):
         try:
             for line in message.readlines():
                 error_file.write(line)
-        except Exception:
-            error_file.write(unicode(message))
+        except Exception, e:
+            error_file.write(str(message))
+            error_file.write(str(e))
             pass
         error_file.close()
     if message and not error_file_name:
@@ -427,11 +429,11 @@ def raise_error(message=None, error_file_name=None, error_level=1):
 
         err_file.write(str(message))
         err_file.close()
-        print message
-        sys.exit(error_level)
+    print message
+    sys.exit(error_level)
 
 
-def write_successlog(filename, message=''):
+def write_successlog(file_name, message=''):
     """Writes down action of succeeded sending."""
     if os.path.isfile(LOG_FILE_MAIN):
         log_file = open(LOG_FILE_MAIN, 'a')
@@ -442,26 +444,26 @@ def write_successlog(filename, message=''):
     log_file.write(str(datetime.datetime.now())+'\n')
     log_file.write('-----------------------------------------------------------------------------\n')
     if message:
-        log_file.write(message + u' ' + unicode(filename))
+        log_file.write(message + u' ' + unicode(file_name))
     else:
-        log_file.write(u'UPLOAD SUCCESSFUL of file: ' + unicode(filename))
+        log_file.write('UPLOAD SUCCESSFUL of file: %s' % str(file_name))
     log_file.close()
 
 
-def walk_directory(rootdir, file_type=None):
+def walk_directory(rootdir, f_type=None):
     """Walks through directory with files of provided format and
 
     returns the list of their name with path (ready to open) or empty list."""
-    fileList = []
+    file_list = []
     for root, subFolders, files in os.walk(rootdir):
-        for file in files:
-            if file_type:
-                if '.' in file:
-                    if os.path.splitext(file)[1] == ('.' + str(file_type)):
-                        fileList.append(os.path.join(root,file))
+        for f in files:
+            if f_type:
+                if '.' in f:
+                    if os.path.splitext(f)[1] == ('.' + str(f_type)):
+                        file_list.append(os.path.join(root, f))
             else:
-                fileList.append(os.path.join(root,file))
-    return fileList
+                file_list.append(os.path.join(root, f))
+    return file_list
 
 
 def remove_file(file_path):
@@ -471,7 +473,7 @@ def remove_file(file_path):
             os.remove(file_path)
             write_successlog(file_path, ' Success removing file:')
         except Exception, e:
-            raise_error(e, filename)
+            raise_error(e, file_path)
     else:
         raise_error(DEFAULT_ERROR_MESSAGES['no_file'] + ': ' + file_path)
 
