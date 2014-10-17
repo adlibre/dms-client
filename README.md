@@ -74,7 +74,7 @@ You may specify an alternative configuration file at runtime with '-config' key 
     -fileinfo_location
     [API_FILEINFO_LOCATION=api/revision_count/] in config
         Adlibre DMS API location to get file revisions count.
-        This option se and configured properly also applies proper support of uncategorized file into API.
+        This option set and configured properly provides support of uncategorized file code into API.
         It stores file names of API returned uncetegorized code into the log file and warns user accordingly.
 
     -ft
