@@ -16,7 +16,7 @@ import itertools
 import ConfigParser
 import datetime
 
-__version__ = '0.7.2'
+__version__ = '0.7.3'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_client.cfg'
