@@ -306,7 +306,13 @@ def upload_file(file_place, opt):
             print 'SERVER RESPONSE: OK'
         if response.code == 200:
             if opt['fileinfo_loc']:
-                opt['uploaded_code'] = json.loads(response.fp.read())
+                r = ''
+                try:
+                    r = json.loads(response.fp.read())
+                except ValueError:
+                    raise_error('No Json returned from API: %s' % filename)
+                    pass
+                opt['uploaded_code'] = r
                 result = check_file_uploaded(file_place, opt, opener)
                 if not result:
                     raise_error('File uploaded check failed %s' % file_name)
