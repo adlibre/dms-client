@@ -15,8 +15,9 @@ import mimetypes
 import itertools
 import ConfigParser
 import datetime
+import base64
 
-__version__ = '0.7.3'
+__version__ = '0.7.4'
 
 PROJECT_PATH = os.path.abspath(os.path.split(sys.argv[0])[0])
 DEFAULT_CFG_FILE = 'dms_client.cfg'
@@ -249,22 +250,55 @@ def check_file_uploaded(file_place, opts, opener):
     return False
 
 
+class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
+    """Preemptive basic auth.
+
+    Instead of waiting for a 403 to then retry with the credentials,
+    send the credentials if the url is handled by the password manager.
+    Note: please use realm=None when calling add_password."""
+    def http_request(self, req):
+        url = req.get_full_url()
+        realm = None
+        # this is very similar to the code from retry_http_basic_auth()
+        # but returns a request object.
+        user, pw = self.passwd.find_user_password(realm, url)
+        if pw:
+            raw = "%s:%s" % (user, pw)
+            auth = 'Basic %s' % base64.b64encode(raw).strip()
+            req.add_unredirected_header(self.auth_header, auth)
+        return req
+
+    https_request = http_request
+
+
+def build_opener(opt):
+    # Creating Auth Opener
+    # create a password manager
+    auth_handler = PreemptiveBasicAuthHandler()
+    # Add the username and password.
+    # If we knew the realm, we could use it instead of ``None``.
+    auth_handler.add_password(
+        realm=None,
+        uri=opt['host'],
+        user=opt['username'],
+        passwd=opt['password']
+    )
+    # create "opener" (OpenerDirector instance)
+    opener = urllib2.build_opener(auth_handler)
+    # Install the opener.
+    # Now all calls to urllib2.urlopen use our opener.
+    urllib2.install_opener(opener)
+    return opener
+
+
 def upload_file(file_place, opt):
     """Main uploader function"""
     silent_ = opt['silent']
 
-    # Creating Auth Opener
-    # create a password manager
-    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    # Add the username and password.
-    # If we knew the realm, we could use it instead of ``None``.
-    password_mgr.add_password(None, opt['host'], opt['username'], opt['password'])
-    handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-    # create "opener" (OpenerDirector instance)
-    opener = urllib2.build_opener(handler)
-    # Install the opener.
-    # Now all calls to urllib2.urlopen use our opener.
-    urllib2.install_opener(opener)
+    if not 'opener' in opt:
+        opener = build_opener(opt)
+    else:
+        opener = opt['opener']
 
     # File upload
     # Opening file for operations
@@ -636,6 +670,7 @@ if __name__ == '__main__':
     if filename:
         upload_file(filename, options)
     elif directory:
+        options['opener'] = build_opener(options)
         filenames = walk_directory(directory, file_type)
         if not silent:
             print 'Sending files: %s' % filenames
