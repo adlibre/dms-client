@@ -32,7 +32,8 @@ DEFAULT_CFG_OPTIONS = [
     'files_type',
     'user_agent',
     'remove',
-    'API_FILEINFO_LOCATION'
+    'API_FILEINFO_LOCATION',
+    'config_retry_on_errors',
 ]
 DEFAULT_API_LOCATION = 'api/file/'
 DEFAULT_USER_AGENT = 'Adlibre DMS API file uploader version: %s' % __version__
@@ -55,6 +56,7 @@ DEFAULT_ERROR_MESSAGES = {
                       'Please recheck location in your config. Refer to -h for help.',
     'no_file': 'File does not exist.'
 }
+UPLOAD_RETRIES_COUNT = 3
 
 help_text = """
 Command line Adlibre DMS file uploader utility.
@@ -145,6 +147,9 @@ Available options:
     -mimetype
     [mimetype=application/pdf] in config
         mimetype of file to be sent. Default is: application/pdf
+    [config_retry_on_errors=yes] in config
+        Either to retry upload of a file or just fail with error.
+        Default retries count is 3.
 
 Note: Console commands are for overriding config settings.
 e.g. In case you will run '""" + sys.argv[0] + """ -f somefile.pdf'
@@ -294,6 +299,7 @@ def build_opener(opt):
 def upload_file(file_place, opt):
     """Main uploader function"""
     silent_ = opt['silent']
+    retry = opt['config_retry_on_errors']
 
     if not 'opener' in opt:
         opener = build_opener(opt)
@@ -333,7 +339,7 @@ def upload_file(file_place, opt):
         if not silent_:
             print 'SERVER RESPONSE: %s' % e
             print 'Writing Error file'
-        raise_error("%s : %s""" % (file_place, e))
+        raise_error("%s : %s""" % (file_place, e), retry=retry)
         pass
     if response:
         if not silent_:
@@ -345,15 +351,18 @@ def upload_file(file_place, opt):
                     r = json.loads(response.fp.read())
                 except ValueError:
                     raise_error('No Json returned from API: %s' % filename)
+                    return False
                     pass
                 opt['uploaded_code'] = r
                 result = check_file_uploaded(file_place, opt, opener)
                 if not result:
-                    raise_error('File uploaded check failed %s' % file_name)
+                    raise_error('File uploaded check failed %s' % file_name, retry=retry)
                     return False
             write_successlog(file_name)
             if opt['remove']:
                 remove_file(file_place)
+            return True
+    return False
 
 
 def get_full_filename(full_name):
@@ -442,7 +451,7 @@ def parse_config(cfg_file_name=None, config_chapter=False, _silent=False):
     return config_options
 
 
-def raise_error(message=None, error_level=1):
+def raise_error(message=None, error_level=1, retry=False):
     """Breaks program with error, message provided.
 
     Writes down error text to file."""
@@ -460,7 +469,8 @@ def raise_error(message=None, error_level=1):
         err_file.close()
         write_successlog('Error!', message=message)
     print message
-    sys.exit(error_level)
+    if not retry:
+        sys.exit(error_level)
 
 
 def write_successlog(file_name, message=''):
@@ -506,6 +516,27 @@ def remove_file(file_path):
             raise_error("%s : %s""" % (file_path, e))
     else:
         raise_error(DEFAULT_ERROR_MESSAGES['no_file'] + ': ' + file_path)
+
+
+def retry_upload(retries_count, name, opt):
+    """Retries upload of file given amount of times"""
+    silent_ = opt['silent']
+    counter = 1
+    while counter <= retries_count:
+        uploaded = False
+        if not silent_:
+            print 'Upload attempt #%s' % counter
+        try:
+            counter += 1
+            uploaded = upload_file(name, options)
+        except Exception, e:
+            message = 'Exception with upload! Will retry...'
+            write_successlog(message, message=str(e))
+            if not silent_:
+                print '%s %s' % (message, str(e))
+            pass
+        if uploaded:
+            break
 
 
 ###########################################################################################
@@ -639,6 +670,12 @@ if __name__ == '__main__':
             if not '-remove' in app_args:
                 remove = False
 
+    config_retry_on_errors = False
+    if 'config_retry_on_errors' in config:
+            retry_value = config['config_retry_on_errors']
+            if retry_value == 'yes':
+                config_retry_on_errors = True
+
     # Other miscellaneous error handling
     if directory:
         if not os.path.isdir(directory):
@@ -664,6 +701,7 @@ if __name__ == '__main__':
         'remove': remove,
         'silent': silent,
         'fileinfo_loc': fileinfo_loc,
+        'config_retry_on_errors': config_retry_on_errors,
     }
 
     # Calling main send function for either one file or directory with directory walker
@@ -679,4 +717,7 @@ if __name__ == '__main__':
                 print 'Nothing to send in this directory.'
             sys.exit(0)
         for name in filenames:
-            upload_file(name, options)
+            if config_retry_on_errors:
+                retry_upload(UPLOAD_RETRIES_COUNT, name, options)
+            else:
+                upload_file(name, options)

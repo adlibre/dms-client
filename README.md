@@ -87,6 +87,9 @@ You may specify an alternative configuration file at runtime with '-config' key 
     -mimetype
     [mimetype=application/pdf] in config
         mimetype of file to be sent. Default is: application/pdf
+    
+    [config_retry_on_errors=yes] in config
+        Either to retry upload of a file or just fail with error.
 
 Note: Console commands are for overriding config settings.
 e.g. In case you will run 'dms_client.py -f somefile.pdf'
